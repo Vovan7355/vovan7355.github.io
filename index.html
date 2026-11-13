@@ -1,0 +1,1216 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LightMan — скачать игру на Android</title>
+<meta name="description" content="LightMan — бесплатная игра для Android о фонарщике, который поднимается сквозь тьму. Скачай APK 1 МБ и зажги фонарь.">
+<meta name="theme-color" content="#05060a">
+<meta property="og:type" content="website">
+<meta property="og:title" content="LightMan — скачать игру на Android">
+<meta property="og:description" content="Бесконечный подъём по платформам, вспышка фонаря и пять существ тьмы. Скачай APK бесплатно.">
+<meta property="og:image" content="assets/shots/climb-780.jpg">
+<link rel="icon" href="assets/icon.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/icon.png">
+<style>
+:root{
+  --ink:#05060a;
+  --void:#0a0d13;
+  --panel:rgba(255,255,255,.045);
+  --line:rgba(255,225,184,.14);
+  --line-soft:rgba(255,255,255,.075);
+  --lamp:#ffb35c;
+  --lamp-hot:#ffd39a;
+  --pale:#ffe9cc;
+  --bone:#d9d0bd;
+  --mist:#8d95a3;
+  --serif:Constantia,"Palatino Linotype","Book Antiqua",Georgia,serif;
+  --sans:"Segoe UI Variable Display","Segoe UI",Bahnschrift,Tahoma,sans-serif;
+  --ease:cubic-bezier(.22,1,.36,1);
+  --shadow:0 34px 90px -24px rgba(0,0,0,.85);
+  --wrap:1180px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;background:var(--ink)}
+body{
+  margin:0;
+  color:var(--bone);
+  background:
+    radial-gradient(ellipse at 50% -10%,rgba(44,59,52,.22),transparent 46%),
+    radial-gradient(ellipse at 12% 72%,rgba(27,34,48,.42),transparent 52%),
+    radial-gradient(ellipse at 88% 22%,rgba(27,34,48,.32),transparent 44%),
+    linear-gradient(180deg,#05060a 0%,#080a0f 52%,#05060a 100%);
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  opacity:.5;
+  background:
+    repeating-linear-gradient(90deg,transparent 0 159px,rgba(120,137,148,.025) 160px),
+    radial-gradient(circle at 50% 45%,transparent 34%,rgba(0,0,0,.6) 100%);
+}
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  opacity:.045;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode:overlay;
+}
+::selection{background:rgba(255,179,92,.3);color:#fff6e8}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--lamp);outline-offset:4px;border-radius:6px}
+.wrap{width:min(var(--wrap),calc(100% - 48px));margin-inline:auto;position:relative;z-index:1}
+.skip{
+  position:absolute;left:16px;top:-80px;z-index:100;
+  padding:12px 18px;border-radius:12px;background:var(--lamp);color:#1a0e04;
+  font-weight:600;transition:top .3s var(--ease);
+}
+.skip:focus{top:16px}
+
+.scroll-progress{position:fixed;inset:0 0 auto;height:2px;z-index:60;background:transparent}
+.scroll-progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff9d44,#ffe0b5);box-shadow:0 0 18px rgba(255,179,92,.75);transition:width .1s linear}
+
+.site-header{
+  position:fixed;
+  inset:0 0 auto;
+  z-index:50;
+  padding:18px 0;
+  border-bottom:1px solid transparent;
+  transition:padding .4s var(--ease),background .4s var(--ease),border-color .4s var(--ease),backdrop-filter .4s var(--ease);
+}
+.site-header.is-scrolled{
+  padding:10px 0;
+  background:rgba(5,6,10,.72);
+  border-bottom-color:var(--line-soft);
+  backdrop-filter:blur(18px) saturate(130%);
+  -webkit-backdrop-filter:blur(18px) saturate(130%);
+}
+.header-inner{display:flex;align-items:center;gap:28px;justify-content:space-between}
+.brand{display:inline-flex;align-items:center;gap:12px;font-family:var(--serif);font-size:1.25rem;letter-spacing:.02em;color:var(--pale)}
+.brand svg{width:30px;height:30px;color:var(--lamp);filter:drop-shadow(0 0 12px rgba(255,179,92,.5))}
+.brand b{font-weight:400}
+.brand .accent{color:var(--lamp)}
+.nav{display:flex;align-items:center;gap:6px}
+.nav a{
+  position:relative;padding:9px 14px;border-radius:999px;
+  font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(217,208,189,.66);
+  transition:color .3s var(--ease),background .3s var(--ease);
+}
+.nav a:hover{color:var(--pale);background:rgba(255,255,255,.05)}
+.header-actions{display:flex;align-items:center;gap:12px}
+
+.btn{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  padding:15px 26px;border:1px solid transparent;border-radius:999px;
+  font-size:.78rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;line-height:1;
+  cursor:pointer;overflow:hidden;
+  transition:transform .35s var(--ease),box-shadow .35s var(--ease),background .35s var(--ease),border-color .35s var(--ease),color .35s var(--ease);
+}
+.btn svg{width:16px;height:16px;flex:none}
+.btn-primary{
+  background:linear-gradient(135deg,#ffd08a 0%,#ffab5a 48%,#ec7f2f 100%);
+  color:#241204;
+  box-shadow:0 14px 44px -14px rgba(255,155,60,.8),inset 0 1px 0 rgba(255,255,255,.5);
+}
+.btn-primary::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.55) 48%,transparent 62%);
+  transform:translateX(-120%);
+  transition:transform .8s var(--ease);
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 20px 54px -12px rgba(255,155,60,.9),inset 0 1px 0 rgba(255,255,255,.55)}
+.btn-primary:hover::after{transform:translateX(120%)}
+.btn-primary:active{transform:translateY(0) scale(.99)}
+.btn-ghost{
+  border-color:var(--line);color:var(--pale);
+  background:rgba(255,255,255,.035);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+}
+.btn-ghost:hover{transform:translateY(-2px);border-color:rgba(255,225,184,.34);background:rgba(255,255,255,.07)}
+.btn-sm{padding:12px 20px;font-size:.72rem}
+.header-cta{display:inline-flex}
+
+.menu-btn{
+  display:none;width:44px;height:44px;border-radius:50%;
+  border:1px solid var(--line);background:rgba(255,255,255,.04);cursor:pointer;
+  align-items:center;justify-content:center;flex-direction:column;gap:5px;
+}
+.menu-btn span{display:block;width:18px;height:1.5px;background:var(--pale);transition:transform .35s var(--ease),opacity .35s var(--ease)}
+body.nav-open .menu-btn span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+body.nav-open .menu-btn span:nth-child(2){opacity:0}
+body.nav-open .menu-btn span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+
+.mobile-menu{
+  position:fixed;inset:0;z-index:45;
+  display:flex;flex-direction:column;justify-content:center;gap:8px;
+  padding:96px 32px 40px;
+  background:rgba(5,6,10,.96);
+  backdrop-filter:blur(20px);
+  opacity:0;visibility:hidden;transform:translateY(-12px);
+  transition:opacity .45s var(--ease),transform .45s var(--ease),visibility .45s;
+}
+body.nav-open .mobile-menu{opacity:1;visibility:visible;transform:none}
+.mobile-menu a:not(.btn){
+  font-family:var(--serif);font-size:clamp(2rem,9vw,3rem);line-height:1.25;
+  color:rgba(255,233,204,.82);border-bottom:1px solid var(--line-soft);padding:10px 0;
+  transition:color .3s var(--ease),padding-left .3s var(--ease);
+}
+.mobile-menu a:not(.btn):hover{color:var(--lamp);padding-left:8px}
+.mobile-menu .btn{margin-top:24px;align-self:flex-start}
+
+.hero{position:relative;min-height:100svh;display:flex;align-items:center;padding:148px 0 96px;overflow:hidden;z-index:1}
+.aurora{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.aurora i{
+  position:absolute;display:block;border-radius:50%;filter:blur(70px);opacity:.5;
+  transform:translate3d(calc(var(--mx,0) * 18px),calc(var(--my,0) * 18px),0);
+  transition:transform 1.2s var(--ease);
+}
+.aurora i:nth-child(1){width:520px;height:520px;left:-140px;top:-80px;background:rgba(255,150,60,.14);animation:drift 18s ease-in-out infinite alternate}
+.aurora i:nth-child(2){width:620px;height:620px;right:-180px;top:8%;background:rgba(60,90,120,.16);animation:drift 24s ease-in-out infinite alternate-reverse}
+.aurora i:nth-child(3){width:440px;height:440px;left:38%;bottom:-200px;background:rgba(255,179,92,.08);animation:drift 21s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(40px,-30px,0) scale(1.08)}}
+
+#fireflies{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.hero-grid{display:grid;grid-template-columns:1.04fr .96fr;gap:56px;align-items:center;width:min(var(--wrap),calc(100% - 48px));margin-inline:auto;position:relative;z-index:2}
+
+.eyebrow{
+  display:inline-flex;align-items:center;gap:14px;margin:0 0 18px;
+  font-size:.68rem;letter-spacing:.34em;text-transform:uppercase;color:var(--mist);
+}
+.eyebrow::before{content:"";width:34px;height:1px;background:linear-gradient(90deg,var(--lamp),transparent)}
+.hero-title{
+  font-family:var(--serif);font-weight:400;
+  font-size:clamp(4.2rem,11.5vw,9.6rem);line-height:.86;letter-spacing:-.025em;
+  margin:0 0 22px;color:var(--pale);
+}
+.hero-title span{
+  display:inline-block;
+  background:linear-gradient(178deg,#fff7ec 0%,#ffe3bd 38%,#ffb864 68%,#e97c2c 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 6px 44px rgba(255,160,70,.3));
+}
+.hero-title .accent{color:transparent}
+.hero-lede{max-width:46ch;margin:0 0 30px;font-size:clamp(1rem,1.35vw,1.12rem);color:rgba(217,208,189,.76)}
+.hero-actions{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:26px}
+.hero-meta{display:flex;flex-wrap:wrap;gap:10px 18px;padding:0;margin:0;list-style:none;font-size:.76rem;letter-spacing:.08em;color:rgba(141,149,163,.9);text-transform:uppercase}
+.hero-meta li{display:inline-flex;align-items:center;gap:8px}
+.hero-meta li::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--lamp);box-shadow:0 0 10px rgba(255,179,92,.9)}
+
+.hero-visual{position:relative;display:grid;place-items:center;perspective:1400px;min-height:560px}
+.hero-glow{
+  position:absolute;width:min(620px,105%);aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,170,80,.32) 0%,rgba(255,140,50,.1) 42%,transparent 68%);
+  filter:blur(18px);animation:breathe 8s ease-in-out infinite alternate;
+}
+@keyframes breathe{from{transform:scale(.94);opacity:.75}to{transform:scale(1.06);opacity:1}}
+.phone{
+  --rx:0deg;--ry:0deg;
+  position:relative;width:min(320px,74vw);aspect-ratio:1170/2532;
+  padding:9px;border-radius:54px;
+  background:linear-gradient(155deg,#343a46 0%,#0b0e14 34%,#1a1f28 72%,#2b303b 100%);
+  box-shadow:
+    0 40px 100px -26px rgba(0,0,0,.9),
+    0 0 0 1px rgba(255,225,184,.14),
+    inset 0 0 0 1px rgba(255,255,255,.07);
+  transform:rotateX(var(--rx)) rotateY(var(--ry)) translateY(var(--py,0));
+  transition:transform .5s var(--ease);
+  z-index:2;
+}
+.phone::before{
+  content:"";position:absolute;inset:14px;border-radius:44px;z-index:3;pointer-events:none;
+  background:linear-gradient(140deg,rgba(255,255,255,.12),transparent 28%,transparent 70%,rgba(255,255,255,.04));
+  mix-blend-mode:screen;opacity:.55;
+}
+.phone::after{
+  content:"";position:absolute;top:18px;left:50%;transform:translateX(-50%);
+  width:86px;height:22px;border-radius:999px;background:#05060a;z-index:4;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);
+}
+.phone img{width:100%;height:100%;object-fit:cover;border-radius:46px;position:relative;z-index:1;background:#0b0e14;filter:brightness(1.06) saturate(1.04)}
+.phone-tag{
+  position:absolute;z-index:5;display:flex;align-items:center;gap:10px;
+  padding:12px 16px;border-radius:16px;
+  background:rgba(10,13,19,.78);border:1px solid var(--line);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  box-shadow:0 20px 50px -18px rgba(0,0,0,.9);
+  font-size:.72rem;letter-spacing:.06em;color:rgba(255,233,204,.9);
+  animation:float 7s ease-in-out infinite alternate;
+}
+.phone-tag svg{width:20px;height:20px;color:var(--lamp);flex:none}
+.phone-tag b{display:block;font-weight:600;font-size:.8rem;color:var(--pale);letter-spacing:.02em}
+.phone-tag span{display:block;font-size:.68rem;color:var(--mist);letter-spacing:.04em}
+.phone-tag.one{left:-8%;top:16%}
+.phone-tag.two{right:-6%;bottom:18%;animation-delay:-3.4s}
+@keyframes float{from{transform:translateY(-8px)}to{transform:translateY(10px)}}
+.hero-visual .halo{position:absolute;inset:auto;bottom:4%;width:70%;height:40px;border-radius:50%;background:rgba(255,150,60,.22);filter:blur(26px);z-index:0}
+
+.scroll-cue{
+  position:absolute;left:50%;bottom:26px;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  font-size:.62rem;letter-spacing:.32em;text-transform:uppercase;color:rgba(141,149,163,.65);
+  z-index:3;
+}
+.scroll-cue i{display:block;width:1px;height:42px;background:linear-gradient(180deg,var(--lamp),transparent);animation:cue 2.6s ease-in-out infinite}
+@keyframes cue{0%,100%{opacity:.3;transform:scaleY(.6);transform-origin:top}50%{opacity:1;transform:scaleY(1)}}
+
+.marquee{
+  position:relative;z-index:1;overflow:hidden;padding:20px 0;
+  border-block:1px solid var(--line-soft);
+  background:rgba(255,255,255,.012);
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
+}
+.marquee-track{display:flex;width:max-content;animation:marquee 42s linear infinite}
+.marquee-track span{
+  display:inline-flex;align-items:center;gap:26px;padding-right:26px;
+  font-family:var(--serif);font-size:.95rem;letter-spacing:.22em;text-transform:uppercase;
+  color:rgba(217,208,189,.42);white-space:nowrap;
+}
+.marquee-track span::after{content:"";width:5px;height:5px;border-radius:50%;background:rgba(255,179,92,.55)}
+@keyframes marquee{to{transform:translateX(-50%)}}
+.marquee:hover .marquee-track{animation-play-state:paused}
+
+.section{position:relative;padding:clamp(84px,10vw,140px) 0;z-index:1}
+.section-head{display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:end;margin-bottom:clamp(40px,5vw,64px)}
+.section-head h2{
+  font-family:var(--serif);font-weight:400;
+  font-size:clamp(2.2rem,4.6vw,3.9rem);line-height:1.04;letter-spacing:-.015em;
+  margin:0;color:#f4e9d6;
+}
+.section-head h2 em{font-style:normal;color:var(--lamp)}
+.section-head p{margin:0;color:rgba(217,208,189,.62);max-width:44ch;justify-self:end}
+.section-head.center{grid-template-columns:1fr;text-align:center;justify-items:center}
+.section-head.center p{justify-self:center}
+
+.about-grid{display:grid;grid-template-columns:1fr .92fr;gap:clamp(40px,6vw,80px);align-items:center}
+.about-copy h2{
+  font-family:var(--serif);font-weight:400;font-size:clamp(2.1rem,4.4vw,3.6rem);
+  line-height:1.06;letter-spacing:-.015em;margin:0 0 26px;color:#f4e9d6;
+}
+.about-copy p{margin:0 0 18px;color:rgba(217,208,189,.72);max-width:52ch}
+.about-copy p:last-of-type{margin-bottom:0}
+.stats{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+  margin-top:38px;border:1px solid var(--line-soft);border-radius:20px;overflow:hidden;
+  background:var(--line-soft);
+}
+.stat{padding:20px 16px;background:rgba(9,11,17,.86);text-align:center}
+.stat b{display:block;font-family:var(--serif);font-size:clamp(1.5rem,2.6vw,2.1rem);font-weight:400;color:var(--lamp);line-height:1.1}
+.stat span{display:block;margin-top:6px;font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:var(--mist)}
+
+.about-visual{position:relative;min-height:520px;display:grid;place-items:center}
+.about-visual .phone{position:absolute;width:min(250px,52vw);transition:transform .7s var(--ease)}
+.about-visual .phone:nth-child(1){transform:translate(-34%,-2%) rotate(-7deg)}
+.about-visual .phone:nth-child(2){transform:translate(30%,6%) rotate(6deg);z-index:3}
+.about-visual .phone:nth-child(1)::after,.about-visual .phone:nth-child(2)::after{display:none}
+.about-visual .phone:hover{transform:translate(-34%,-4%) rotate(-4deg) scale(1.02)}
+.about-visual .phone:nth-child(2):hover{transform:translate(30%,4%) rotate(3deg) scale(1.02)}
+.about-visual::before{
+  content:"";position:absolute;width:70%;aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,160,70,.24),transparent 66%);filter:blur(30px);
+}
+
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.card{
+  position:relative;padding:28px 26px 30px;border-radius:24px;overflow:hidden;
+  border:1px solid var(--line-soft);
+  background:linear-gradient(180deg,rgba(255,255,255,.052),rgba(255,255,255,.014));
+  transition:transform .5s var(--ease),border-color .5s var(--ease),background .5s var(--ease);
+}
+.card::before{
+  content:"";position:absolute;inset:0;opacity:0;transition:opacity .5s var(--ease);
+  background:radial-gradient(340px circle at var(--px,50%) var(--py,0%),rgba(255,179,92,.13),transparent 66%);
+  pointer-events:none;
+}
+.card:hover{transform:translateY(-5px);border-color:rgba(255,225,184,.2);background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02))}
+.card:hover::before{opacity:1}
+.card-icon{
+  display:grid;place-items:center;width:48px;height:48px;border-radius:15px;margin-bottom:20px;
+  border:1px solid rgba(255,179,92,.24);background:rgba(255,179,92,.09);color:var(--lamp);
+}
+.card-icon svg{width:23px;height:23px}
+.card h3{margin:0 0 8px;font-size:1.02rem;font-weight:600;letter-spacing:.01em;color:#f0e5d1}
+.card p{margin:0;font-size:.9rem;color:rgba(217,208,189,.6);line-height:1.62}
+
+.how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:26px}
+.step{
+  position:relative;padding:30px 26px 32px;border-radius:24px;
+  border:1px solid var(--line-soft);background:rgba(255,255,255,.025);
+  transition:border-color .5s var(--ease),transform .5s var(--ease),background .5s var(--ease);
+}
+.step:hover{transform:translateY(-4px);border-color:rgba(255,225,184,.2);background:rgba(255,255,255,.045)}
+.step b{
+  display:block;font-family:var(--serif);font-weight:400;font-size:2.6rem;line-height:1;
+  color:transparent;-webkit-text-stroke:1px rgba(255,179,92,.5);margin-bottom:18px;
+}
+.step h3{margin:0 0 8px;font-size:1.02rem;color:#f0e5d1}
+.step p{margin:0;font-size:.9rem;color:rgba(217,208,189,.6)}
+
+.controls{
+  display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;
+  padding:22px 26px;border-radius:20px;border:1px solid var(--line-soft);
+  background:rgba(9,11,17,.6);
+}
+.controls .label{font-size:.62rem;letter-spacing:.24em;text-transform:uppercase;color:var(--mist);margin-right:6px}
+.controls .pair{display:inline-flex;align-items:center;gap:8px;font-size:.78rem;color:rgba(217,208,189,.72)}
+kbd{
+  display:inline-flex;align-items:center;justify-content:center;min-width:2.1em;min-height:1.85em;
+  padding:.08em .5em;border:1px solid rgba(207,197,176,.26);border-bottom-color:rgba(207,197,176,.12);
+  border-radius:5px;background:rgba(7,8,11,.6);box-shadow:inset 0 -1px 0 rgba(255,255,255,.05);
+  font-size:.72em;letter-spacing:.08em;color:rgba(226,218,201,.85);
+}
+.controls .note{font-size:.74rem;color:rgba(141,149,163,.8);margin-left:auto}
+
+.frames-head{display:flex;align-items:flex-end;justify-content:space-between;gap:30px;margin-bottom:36px}
+.frames-head .section-head{margin-bottom:0;grid-template-columns:1fr;max-width:640px}
+.frames-head .section-head p{justify-self:start;margin-top:16px}
+.gallery-btns{display:flex;gap:10px}
+.round-btn{
+  width:46px;height:46px;border-radius:50%;display:grid;place-items:center;cursor:pointer;
+  border:1px solid var(--line);background:rgba(255,255,255,.035);color:var(--pale);
+  transition:background .3s var(--ease),border-color .3s var(--ease),transform .3s var(--ease),opacity .3s var(--ease);
+}
+.round-btn:hover{background:rgba(255,255,255,.08);border-color:rgba(255,225,184,.3);transform:translateY(-2px)}
+.round-btn:disabled{opacity:.32;cursor:default;transform:none}
+.round-btn svg{width:18px;height:18px}
+.gallery{
+  display:flex;gap:22px;overflow-x:auto;scroll-snap-type:x mandatory;
+  padding:6px 4px 26px;scrollbar-width:none;
+}
+.gallery::-webkit-scrollbar{display:none}
+.shot{flex:0 0 auto;width:min(272px,66vw);margin:0;scroll-snap-align:center}
+.shot .phone{width:100%;border-radius:40px;padding:7px;pointer-events:none;box-shadow:0 24px 60px -26px rgba(0,0,0,.85),0 0 0 1px rgba(255,225,184,.12)}
+.shot .phone::before{inset:11px;border-radius:33px;opacity:.2}
+.shot .phone::after{display:none}
+.shot .phone img{border-radius:34px}
+.shot figcaption{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  margin-top:14px;padding:0 6px;font-size:.78rem;color:rgba(217,208,189,.72);
+}
+.shot figcaption i{font-style:normal;font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(141,149,163,.65)}
+
+.shop-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:18px}
+.shop-grid .item{grid-column:span 2}
+.shop-grid .item:nth-child(n+4){grid-column:span 3}
+.item{
+  position:relative;display:flex;flex-direction:column;gap:14px;padding:26px;border-radius:22px;
+  border:1px solid var(--line-soft);background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.012));
+  transition:transform .5s var(--ease),border-color .5s var(--ease);
+}
+.item:hover{transform:translateY(-4px);border-color:rgba(255,225,184,.2)}
+.item-top{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.item-icon{
+  display:grid;place-items:center;width:46px;height:46px;border-radius:14px;flex:none;
+  border:1px solid rgba(255,179,92,.2);background:rgba(255,179,92,.08);color:var(--lamp);
+}
+.item-icon svg{width:23px;height:23px}
+.price{
+  display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;
+  border:1px solid rgba(255,179,92,.26);background:rgba(255,179,92,.09);
+  font-size:.78rem;font-weight:600;color:var(--lamp-hot);white-space:nowrap;
+}
+.price svg{width:14px;height:14px}
+.item h3{margin:0;font-size:1rem;color:#f0e5d1;font-weight:600}
+.item p{margin:0;font-size:.88rem;color:rgba(217,208,189,.6);line-height:1.6}
+.item .tagline{font-size:.64rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(141,149,163,.75)}
+.shop-note{margin:22px 0 0;font-size:.82rem;color:rgba(141,149,163,.8)}
+
+.quests-grid{display:grid;grid-template-columns:1.12fr .88fr;gap:clamp(30px,4vw,56px);align-items:start}
+.quest-list{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:0;padding:0;list-style:none}
+.quest{
+  display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:14px;
+  border:1px solid var(--line-soft);background:rgba(255,255,255,.028);
+  transition:background .3s var(--ease),border-color .3s var(--ease);
+}
+.quest:hover{background:rgba(255,255,255,.06);border-color:rgba(255,225,184,.18)}
+.quest .dot{
+  width:22px;height:22px;border-radius:50%;flex:none;display:grid;place-items:center;
+  border:1px solid rgba(255,179,92,.32);color:var(--lamp);font-size:.6rem;
+}
+.quest .dot svg{width:11px;height:11px}
+.quest .q-copy{min-width:0}
+.quest b{display:block;font-size:.86rem;font-weight:600;color:#e9dfcc}
+.quest small{display:block;font-size:.7rem;color:var(--mist);letter-spacing:.03em}
+.quest .reward{margin-left:auto;font-size:.72rem;color:var(--lamp);white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+.quest .reward svg{width:12px;height:12px}
+.quest-note{margin:18px 0 0;font-size:.8rem;color:rgba(141,149,163,.8)}
+
+.path-card{
+  position:relative;padding:28px;border-radius:24px;border:1px solid var(--line-soft);
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.012));
+}
+.path-card h3{margin:0 0 4px;font-family:var(--serif);font-weight:400;font-size:1.5rem;color:#f4e9d6}
+.path-card > p{margin:0 0 26px;font-size:.82rem;color:var(--mist)}
+.path{position:relative;display:flex;flex-direction:column;gap:26px;padding-left:26px}
+.path::before{content:"";position:absolute;left:6px;top:6px;bottom:6px;width:1px;background:linear-gradient(180deg,var(--lamp),rgba(255,179,92,.1))}
+.path-node{position:relative}
+.path-node::before{
+  content:"";position:absolute;left:-24px;top:7px;width:9px;height:9px;border-radius:50%;
+  background:var(--lamp);box-shadow:0 0 0 4px rgba(255,179,92,.12),0 0 16px rgba(255,179,92,.7);
+}
+.path-node b{display:block;font-family:var(--serif);font-weight:400;font-size:1.35rem;color:var(--pale);line-height:1.1}
+.path-node span{display:block;font-size:.74rem;color:var(--mist);letter-spacing:.04em}
+.path-card .hint{
+  margin:26px 0 0;padding-top:20px;border-top:1px solid var(--line-soft);
+  font-size:.78rem;color:rgba(217,208,189,.6);
+}
+
+.cta{padding:clamp(40px,6vw,80px) 0 clamp(90px,10vw,130px);position:relative;z-index:1}
+.cta-card{
+  position:relative;overflow:hidden;text-align:center;
+  padding:clamp(56px,8vw,96px) 28px;border-radius:32px;
+  border:1px solid rgba(255,225,184,.16);
+  background:
+    radial-gradient(ellipse at 50% 120%,rgba(255,150,60,.22),transparent 62%),
+    linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.012));
+}
+.cta-card::before{
+  content:"";position:absolute;left:50%;top:-40%;width:70%;aspect-ratio:1;transform:translateX(-50%);
+  background:radial-gradient(circle,rgba(255,170,80,.2),transparent 62%);filter:blur(30px);
+  animation:breathe 9s ease-in-out infinite alternate;
+}
+.cta-card .eyebrow{justify-content:center}
+.cta-card .eyebrow::before{display:none}
+.cta-card h2{
+  position:relative;margin:0 0 16px;font-family:var(--serif);font-weight:400;
+  font-size:clamp(2.4rem,6vw,4.6rem);line-height:1;letter-spacing:-.02em;color:#fff3e0;
+  text-shadow:0 0 60px rgba(255,160,70,.25);
+}
+.cta-card p{position:relative;margin:0 auto 30px;max-width:44ch;color:rgba(217,208,189,.68)}
+.cta-card .btn{position:relative}
+.cta-note{position:relative;margin:18px 0 0;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(141,149,163,.7)}
+
+.site-footer{border-top:1px solid var(--line-soft);padding:48px 0 34px;position:relative;z-index:1}
+.footer-grid{display:grid;grid-template-columns:1.4fr .8fr .8fr;gap:36px;align-items:start}
+.footer-brand p{margin:14px 0 0;max-width:34ch;font-size:.85rem;color:rgba(141,149,163,.8)}
+.footer-col h4{margin:0 0 12px;font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:rgba(141,149,163,.7);font-weight:600}
+.footer-col a,.footer-col span{display:block;padding:4px 0;font-size:.86rem;color:rgba(217,208,189,.66);transition:color .3s var(--ease)}
+.footer-col a:hover{color:var(--lamp)}
+.footer-bottom{
+  display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between;
+  margin-top:38px;padding-top:22px;border-top:1px solid var(--line-soft);
+  font-size:.72rem;letter-spacing:.05em;color:rgba(141,149,163,.65);
+}
+.footer-bottom .dot{display:inline-block;width:4px;height:4px;border-radius:50%;background:rgba(255,179,92,.6);vertical-align:middle;margin:0 8px}
+
+[data-reveal]{opacity:0;transform:translateY(28px);transition:opacity .9s var(--ease),transform .9s var(--ease);transition-delay:var(--delay,0ms)}
+[data-reveal].in{opacity:1;transform:none}
+[data-load]{opacity:0;transform:translateY(22px);animation:rise .95s var(--ease) forwards;animation-delay:var(--delay,0ms)}
+@keyframes rise{to{opacity:1;transform:none}}
+
+.install-steps{position:relative;display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:26px 0 0}
+.install-step{
+  display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;
+  border:1px solid var(--line-soft);background:rgba(255,255,255,.03);
+  font-size:.72rem;color:rgba(217,208,189,.72);
+}
+.install-step i{
+  display:grid;place-items:center;width:20px;height:20px;border-radius:50%;font-style:normal;
+  font-size:.6rem;color:var(--lamp);background:rgba(255,179,92,.12);border:1px solid rgba(255,179,92,.28);
+}
+
+.download-bar{
+  position:fixed;left:0;right:0;bottom:0;z-index:55;
+  display:none;align-items:center;justify-content:space-between;gap:12px;
+  padding:10px 16px;padding-bottom:calc(10px + env(safe-area-inset-bottom));
+  background:rgba(5,6,10,.92);border-top:1px solid var(--line);
+  backdrop-filter:blur(18px) saturate(130%);-webkit-backdrop-filter:blur(18px) saturate(130%);
+}
+.download-bar b{display:block;font-size:.84rem;line-height:1.25;color:var(--pale);letter-spacing:.01em}
+.download-bar span{display:block;font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mist)}
+.download-bar .btn{flex:none;padding:12px 18px;font-size:.7rem}
+
+@media (max-width:1024px){
+  .hero-grid{grid-template-columns:1fr;gap:56px;text-align:center}
+  .hero-copy{display:flex;flex-direction:column;align-items:center}
+  .hero-lede{margin-inline:auto}
+  .hero-actions,.hero-meta{justify-content:center}
+  .hero-visual{min-height:0;margin-top:8px}
+  .about-grid{grid-template-columns:1fr;gap:48px}
+  .about-copy{order:2}
+  .about-visual{order:1;min-height:440px}
+  .stats{grid-template-columns:repeat(4,1fr)}
+  .cards,.shop-grid,.how-grid{grid-template-columns:repeat(2,1fr)}
+  .section-head{grid-template-columns:1fr;gap:16px}
+  .section-head p{justify-self:start}
+  .quests-grid{grid-template-columns:1fr}
+}
+@media (max-width:760px){
+  .nav,.header-cta{display:none}
+  .menu-btn{display:flex}
+  body{padding-bottom:calc(78px + env(safe-area-inset-bottom))}
+  .download-bar{display:flex}
+  .hero{padding-top:104px}
+  .hero-title{font-size:clamp(3.4rem,16vw,5.6rem)}
+  .hero-meta{font-size:.68rem;gap:8px 14px}
+  .phone-tag.one{left:-2%;top:8%;padding:9px 11px}
+  .phone-tag.two{right:0;bottom:10%;padding:9px 11px}
+  .phone-tag svg{width:17px;height:17px}
+  .phone-tag b{font-size:.7rem}
+  .phone-tag span{font-size:.58rem}
+  .cards,.shop-grid,.how-grid{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .quest-list{grid-template-columns:1fr}
+  .controls .note{margin-left:0}
+  .footer-grid{grid-template-columns:1fr 1fr}
+  .footer-brand{grid-column:1/-1}
+  .about-visual .phone{width:min(220px,46vw)}
+  .about-visual{min-height:380px}
+  .scroll-cue{display:none}
+  .gallery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;overflow:visible;scroll-snap-type:none;padding:4px 0 0}
+  .gallery-btns{display:none}
+  .shot{width:auto}
+  .shot .phone{border-radius:30px;padding:5px}
+  .shot .phone::before{inset:8px;border-radius:25px}
+  .shot .phone img{border-radius:26px}
+  .shot figcaption{font-size:.68rem;margin-top:10px;padding:0 2px}
+  .shot figcaption i{font-size:.54rem}
+  .install-steps{gap:6px}
+  .install-step{font-size:.66rem;padding:7px 10px}
+}
+@media (max-width:480px){
+  .wrap,.hero-grid{width:calc(100% - 32px)}
+  .section{padding:72px 0}
+  .btn{padding:14px 22px}
+  .hero-actions .btn{flex:1 1 auto}
+  .frames-head{flex-direction:column;align-items:flex-start}
+  .footer-grid{grid-template-columns:1fr}
+  .stat{padding:16px 10px}
+  .stat span{font-size:.56rem}
+  .shot figcaption{flex-direction:column;align-items:flex-start;gap:2px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+  [data-reveal],[data-load]{opacity:1;transform:none}
+  .marquee-track{animation:none}
+  .gallery{scroll-behavior:auto}
+}
+</style>
+</head>
+<body id="top">
+<a class="skip" href="#main">Перейти к содержимому</a>
+<div class="scroll-progress" aria-hidden="true"><span id="scrollBar"></span></div>
+
+<header class="site-header" id="header">
+  <div class="wrap header-inner">
+    <a class="brand" href="#top" aria-label="LightMan — на главную">
+      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M13 5h6M14 5v3.2l-2.4 3.1v11.2h8.8V11.3L18 8.2V5"/>
+        <path d="M11.6 14.5h8.8M11.6 19.6h8.8"/>
+        <path d="M16 1.8v1.7M16 25.5v1.6M7.2 8.4l1.3 1M22.2 20.6l1.3 1M24.8 8.4l-1.3 1M9.8 20.6l-1.3 1"/>
+      </svg>
+      <b>Light<span class="accent">Man</span></b>
+    </a>
+    <nav class="nav" aria-label="Основная навигация">
+      <a href="#about">Атмосфера</a>
+      <a href="#features">Возможности</a>
+      <a href="#frames">Кадры</a>
+      <a href="#shop">Лавка</a>
+      <a href="#quests">Задания</a>
+    </nav>
+    <div class="header-actions">
+      <a class="btn btn-primary btn-sm header-cta" href="assets/LightMan.apk" download="LightMan.apk">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v11"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M5 20h14"/></svg>
+        Скачать
+      </a>
+      <button class="menu-btn" id="menuBtn" type="button" aria-label="Открыть меню" aria-expanded="false" aria-controls="mobileMenu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobileMenu" aria-hidden="true">
+  <a href="#about">Атмосфера</a>
+  <a href="#features">Возможности</a>
+  <a href="#frames">Кадры</a>
+  <a href="#shop">Лавка</a>
+  <a href="#quests">Задания</a>
+  <a class="btn btn-primary" href="assets/LightMan.apk" download="LightMan.apk">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v11"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M5 20h14"/></svg>
+    Скачать APK
+  </a>
+</div>
+
+<main id="main">
+  <section class="hero" aria-labelledby="heroTitle">
+    <div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+    <canvas id="fireflies" aria-hidden="true"></canvas>
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow" data-load style="--delay:80ms">Маленькая сказка большой тьмы</p>
+        <h1 class="hero-title" id="heroTitle" data-load style="--delay:160ms"><span>Light</span><span class="accent">Man</span></h1>
+        <p class="hero-lede" data-load style="--delay:260ms">Он несёт свет туда, где свет давно забыли. Бесконечный подъём по платформам: прыжок происходит сам — думай только о пути. Теперь на твоём телефоне.</p>
+        <div class="hero-actions" data-load style="--delay:360ms">
+          <a class="btn btn-primary" href="assets/LightMan.apk" download="LightMan.apk">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v11"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M5 20h14"/></svg>
+            Скачать игру
+          </a>
+          <a class="btn btn-ghost" href="#frames">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="m9 9 6 3-6 3V9Z"/></svg>
+            Смотреть кадры
+          </a>
+        </div>
+        <ul class="hero-meta" data-load style="--delay:460ms">
+          <li>Бесплатно</li>
+          <li>Android APK</li>
+          <li>1 МБ</li>
+          <li>Наклон · касание</li>
+        </ul>
+      </div>
+      <div class="hero-visual" data-load style="--delay:300ms">
+        <div class="hero-glow" aria-hidden="true"></div>
+        <div class="phone" id="heroPhone">
+          <img src="assets/shots/climb-780.jpg" srcset="assets/shots/climb-390.jpg 390w, assets/shots/climb-780.jpg 780w" sizes="(max-width:760px) 74vw, 320px" width="780" height="1688" alt="Фонарщик поднимается по платформам в тёмном лесу, вокруг летают светлячки и мотыльки">
+        </div>
+        <div class="phone-tag one" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+          <div><b>Прыжок сам</b><span>думай только о пути</span></div>
+        </div>
+        <div class="phone-tag two" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4.5 13.2H11l-1 8.8 8.5-11.2H12l1-8.8Z"/></svg>
+          <div><b>Вспышка</b><span>сжигает тьму</span></div>
+        </div>
+        <div class="halo" aria-hidden="true"></div>
+      </div>
+    </div>
+    <div class="scroll-cue" aria-hidden="true"><span>Вниз</span><i></i></div>
+  </section>
+
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track" id="marqueeTrack">
+      <span>Свет</span><span>Тьма</span><span>Платформы</span><span>Монеты</span><span>Рекорды</span><span>Светлячки</span><span>Вспышки</span>
+    </div>
+  </div>
+
+  <section class="section" id="about" aria-labelledby="aboutTitle">
+    <div class="wrap about-grid">
+      <div class="about-copy" data-reveal>
+        <p class="eyebrow">Атмосфера</p>
+        <h2 id="aboutTitle">Тьма не злая.<br>Она просто голодная.</h2>
+        <p>Каждый забег — новый подъём в ночной лес. Платформы уходят вверх, ветки скрипят, а где-то между стволами уже открылся красный глаз. Ты — фонарщик. Твой свет — единственное, что тьма боится.</p>
+        <p>Никаких кнопок прыжка и сложных комбо: идёшь влево и вправо, зажигаешь фонарь — и поднимаешься так высоко, как хватит смелости.</p>
+        <div class="stats">
+          <div class="stat"><b>∞</b><span>метров подъёма</span></div>
+          <div class="stat"><b>5</b><span>существ тьмы</span></div>
+          <div class="stat"><b>10</b><span>заданий</span></div>
+          <div class="stat"><b>5</b><span>артефактов</span></div>
+        </div>
+      </div>
+      <div class="about-visual" data-reveal style="--delay:160ms">
+        <div class="phone">
+          <img src="assets/shots/shield-390.jpg" srcset="assets/shots/shield-390.jpg 390w, assets/shots/shield-780.jpg 780w" sizes="(max-width:760px) 42vw, 250px" width="390" height="844" alt="Игровой экран со щитом света вокруг фонарщика">
+        </div>
+        <div class="phone">
+          <img src="assets/shots/firefly-390.jpg" srcset="assets/shots/firefly-390.jpg 390w, assets/shots/firefly-780.jpg 780w" sizes="(max-width:760px) 42vw, 250px" width="390" height="844" alt="Светлячок летит рядом с фонарщиком и стреляет по мобам">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="features" aria-labelledby="featuresTitle">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div>
+          <p class="eyebrow">Возможности</p>
+          <h2 id="featuresTitle">Что ждёт <em>наверху</em></h2>
+        </div>
+        <p>Короткие правила. Долгие ночи. Всё, что нужно, — идти и светить.</p>
+      </div>
+      <div class="cards">
+        <article class="card" data-reveal>
+          <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V5M6 11l6-6 6 6"/><path d="M4 21h16"/></svg></div>
+          <h3>Бесконечный подъём</h3>
+          <p>Платформы собираются заново каждый забег: два одинаковых пути не случаются.</p>
+        </article>
+        <article class="card" data-reveal style="--delay:70ms">
+          <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18c3.2 0 5.1-2 8-2s4.8 2 8 2"/><path d="M8 14c1.6-1.4 2.6-2 4-2s2.4.6 4 2"/><circle cx="12" cy="6" r="2.2"/></svg></div>
+          <h3>Прыжок сам</h3>
+          <p>Не нужно жать кнопку на краю. Прыжок происходит сам — голова свободна для пути.</p>
+        </article>
+        <article class="card" data-reveal style="--delay:140ms">
+          <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4.5 13.2H11l-1 8.8 8.5-11.2H12l1-8.8Z"/></svg></div>
+          <h3>Вспышка фонаря</h3>
+          <p>Коснись экрана — и тьма отступает. Вспышка сжигает мобов и снова заряжается.</p>
+        </article>
+        <article class="card" data-reveal>
+          <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12s3.4-5.5 9.5-5.5S21.5 12 21.5 12s-3.4 5.5-9.5 5.5S2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></svg></div>
+          <h3>Пять существ тьмы</h3>
+          <p>Ползун, Плакальщик, Мотылёк, Пиявка и Соглядатай. У каждого свой способ добраться до тебя.</p>
+        </article>
+        <article class="card" data-reveal style="--delay:70ms">
+          <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 4h2.2l2.5 10.6h9.6L20 7H6.4"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg></div>
+          <h3>Лавка света</h3>
+          <p>Монеты из темноты превращаются в щит, светлячка, джетпак и другие шансы выжить.</p>
+        </article>
+        <article class="card" data-reveal style="--delay:140ms">
+          <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M7 6H4.5v2A3.5 3.5 0 0 0 8 11.5M17 6h2.5v2A3.5 3.5 0 0 1 16 11.5"/></svg></div>
+          <h3>Задания и рейтинг</h3>
+          <p>Десять заданий считаются сами. Рекорд в метрах уходит в общий рейтинг.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="how" aria-labelledby="howTitle">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div>
+          <p class="eyebrow">Как играть</p>
+          <h2 id="howTitle">Три движения <em>до неба</em></h2>
+        </div>
+        <p>Одно касание света. Наклон вместо кнопок. Всё остальное делает тьма.</p>
+      </div>
+      <div class="how-grid">
+        <article class="step" data-reveal>
+          <b>01</b>
+          <h3>Наклоняй</h3>
+          <p>Наклоняй телефон влево и вправо. Прыжок случится сам, когда платформа закончится.</p>
+        </article>
+        <article class="step" data-reveal style="--delay:80ms">
+          <b>02</b>
+          <h3>Касайся</h3>
+          <p>Касание экрана — вспышка. Она сжигает тьму рядом и даёт передышку.</p>
+        </article>
+        <article class="step" data-reveal style="--delay:160ms">
+          <b>03</b>
+          <h3>Поднимайся</h3>
+          <p>Каждый метр — новый рекорд. Тьма терпелива, но ты выше.</p>
+        </article>
+      </div>
+      <div class="controls" data-reveal>
+        <span class="label">Управление</span>
+        <span class="pair"><kbd>Наклон</kbd> идти</span>
+        <span class="pair"><kbd>Касание</kbd> вспышка</span>
+        <span class="pair"><kbd>Пауза</kbd> кнопка на экране</span>
+        <span class="note">Android · наклон и касание</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="frames" aria-labelledby="framesTitle">
+    <div class="wrap">
+      <div class="frames-head" data-reveal>
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Кадры</p>
+            <h2 id="framesTitle">Свет среди <em>стволов</em></h2>
+            <p>Игра целиком помещается в ладонь: тёмный лес, тёплый фонарь и красные глаза в темноте.</p>
+          </div>
+        </div>
+        <div class="gallery-btns">
+          <button class="round-btn" id="galPrev" type="button" aria-label="Предыдущие кадры">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+          </button>
+          <button class="round-btn" id="galNext" type="button" aria-label="Следующие кадры">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="gallery" id="gallery" tabindex="0" aria-label="Галерея скриншотов игры">
+        <figure class="shot">
+          <div class="phone"><img src="assets/shots/climb-390.jpg" srcset="assets/shots/climb-390.jpg 390w, assets/shots/climb-780.jpg 780w" sizes="(max-width:760px) 45vw, 272px" width="390" height="844" alt="Подъём по платформам в тёмном лесу"></div>
+          <figcaption><span>Подъём</span><i>24 м</i></figcaption>
+        </figure>
+        <figure class="shot">
+          <div class="phone"><img src="assets/shots/shield-390.jpg" srcset="assets/shots/shield-390.jpg 390w, assets/shots/shield-780.jpg 780w" sizes="(max-width:760px) 45vw, 272px" width="390" height="844" alt="Щит света сжигает мобов при касании"></div>
+          <figcaption><span>Щит света</span><i>20 монет</i></figcaption>
+        </figure>
+        <figure class="shot">
+          <div class="phone"><img src="assets/shots/firefly-390.jpg" srcset="assets/shots/firefly-390.jpg 390w, assets/shots/firefly-780.jpg 780w" sizes="(max-width:760px) 45vw, 272px" width="390" height="844" alt="Светлячок сам стреляет по ближайшим мобам"></div>
+          <figcaption><span>Светлячок</span><i>25 монет</i></figcaption>
+        </figure>
+        <figure class="shot">
+          <div class="phone"><img src="assets/shots/quests-390.jpg" srcset="assets/shots/quests-390.jpg 390w, assets/shots/quests-780.jpg 780w" sizes="(max-width:760px) 45vw, 272px" width="390" height="844" alt="Экран заданий с наградами за высоту и монеты"></div>
+          <figcaption><span>Задания</span><i>10 целей</i></figcaption>
+        </figure>
+        <figure class="shot">
+          <div class="phone"><img src="assets/shots/board-390.jpg" srcset="assets/shots/board-390.jpg 390w, assets/shots/board-780.jpg 780w" sizes="(max-width:760px) 45vw, 272px" width="390" height="844" alt="Общий рейтинг фонарщиков по высоте подъёма"></div>
+          <figcaption><span>Рейтинг</span><i>общий</i></figcaption>
+        </figure>
+        <figure class="shot">
+          <div class="phone"><img src="assets/shots/profile-390.jpg" srcset="assets/shots/profile-390.jpg 390w, assets/shots/profile-780.jpg 780w" sizes="(max-width:760px) 45vw, 272px" width="390" height="844" alt="Профиль игрока: рекорд, монеты и покупки"></div>
+          <figcaption><span>Профиль</span><i>рекорд</i></figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="shop" aria-labelledby="shopTitle">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div>
+          <p class="eyebrow">Лавка</p>
+          <h2 id="shopTitle">Свет не <em>бесплатен</em></h2>
+        </div>
+        <p>Монеты находятся в темноте. Одна покупка — один заряд, который может стать последним шансом.</p>
+      </div>
+      <div class="shop-grid">
+        <article class="item" data-reveal>
+          <div class="item-top">
+            <div class="item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2 19 6v5.1c0 4.5-2.9 8.2-7 9.7-4.1-1.5-7-5.2-7-9.7V6l7-2.8Z"/><path d="M12 7.2v9M8.6 11.2h6.8"/></svg></div>
+            <span class="price"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="8.2"/><path d="M12 7.4v9.2M9.6 9.3h4a1.9 1.9 0 0 1 0 3.8h-3.2a1.9 1.9 0 0 0 0 3.8h4.2"/></svg>20</span>
+          </div>
+          <h3>Щит света</h3>
+          <p>3 секунды света, который сжигает мобов при касании. Один заряд.</p>
+          <span class="tagline">защита</span>
+        </article>
+        <article class="item" data-reveal style="--delay:70ms">
+          <div class="item-top">
+            <div class="item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="14" r="3.2"/><path d="M12 10.8V20M9 8.2c-.6-2.2.4-4.2 3-5.2.3 2-.2 3.8-3 5.2ZM15 8.2c.6-2.2-.4-4.2-3-5.2-.3 2 .2 3.8 3 5.2ZM8.8 14.5c-2 .6-3.8.2-5-1.3 1.6-.8 3.3-.7 5 1.3ZM15.2 14.5c2 .6 3.8.2 5-1.3-1.6-.8-3.3-.7-5 1.3Z"/></svg></div>
+            <span class="price"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="8.2"/><path d="M12 7.4v9.2M9.6 9.3h4a1.9 1.9 0 0 1 0 3.8h-3.2a1.9 1.9 0 0 0 0 3.8h4.2"/></svg>25</span>
+          </div>
+          <h3>Светлячок</h3>
+          <p>8 секунд летает рядом и сам стреляет по ближайшим мобам. Один заряд.</p>
+          <span class="tagline">союзник</span>
+        </article>
+        <article class="item" data-reveal style="--delay:140ms">
+          <div class="item-top">
+            <div class="item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15.5h14M6.5 15.5c0-4 2.4-7 5.5-7s5.5 3 5.5 7M12 8.5V6M9 3.5h6M12 3.5v2.5"/><path d="M4 15.5h16"/></svg></div>
+            <span class="price"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="8.2"/><path d="M12 7.4v9.2M9.6 9.3h4a1.9 1.9 0 0 1 0 3.8h-3.2a1.9 1.9 0 0 0 0 3.8h4.2"/></svg>15</span>
+          </div>
+          <h3>Шапка-вертолёт</h3>
+          <p>Один раз подбрасывает вверх. Заряд тратится при использовании.</p>
+          <span class="tagline">рывок</span>
+        </article>
+        <article class="item" data-reveal>
+          <div class="item-top">
+            <div class="item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5h6M10 3.5v3l-2 3v9h8v-9l-2-3v-3M8 12h8M8 18.5h8"/><path d="M10 21c.4-1.6 1-2.4 2-2.4s1.6.8 2 2.4"/></svg></div>
+            <span class="price"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="8.2"/><path d="M12 7.4v9.2M9.6 9.3h4a1.9 1.9 0 0 1 0 3.8h-3.2a1.9 1.9 0 0 0 0 3.8h4.2"/></svg>35</span>
+          </div>
+          <h3>Джетпак</h3>
+          <p>Огненный рывок вверх — выше шапки. Один заряд.</p>
+          <span class="tagline">высота</span>
+        </article>
+        <article class="item" data-reveal style="--delay:70ms">
+          <div class="item-top">
+            <div class="item-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="16" r="4.5"/><path d="M8 16h9l3 3M14 16l-3-5h6l3 5M6 9h5"/></svg></div>
+            <span class="price"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="8.2"/><path d="M12 7.4v9.2M9.6 9.3h4a1.9 1.9 0 0 1 0 3.8h-3.2a1.9 1.9 0 0 0 0 3.8h4.2"/></svg>40</span>
+          </div>
+          <h3>Пороховая пушка</h3>
+          <p>Если сорвёшься вниз, пушка выстрелит тобой обратно на последнюю платформу. Один раз за игру.</p>
+          <span class="tagline">страховка</span>
+        </article>
+      </div>
+      <p class="shop-note" data-reveal>Одна покупка — один заряд. Пушка срабатывает один раз за игру.</p>
+    </div>
+  </section>
+
+  <section class="section" id="quests" aria-labelledby="questsTitle">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <div>
+          <p class="eyebrow">Задания и рейтинг</p>
+          <h2 id="questsTitle">Задания ведут <em>вверх</em></h2>
+        </div>
+        <p>Награды за высоту, охоту и упрямство. Всё считается само — остаётся забрать монеты.</p>
+      </div>
+      <div class="quests-grid">
+        <div>
+          <ul class="quest-list">
+            <li class="quest" data-reveal><span class="dot" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4 10-9"/></svg></span><span class="q-copy"><b>Первый свет</b><small>поднимись на 100 м</small></span><span class="reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="7.6"/><path d="M12 8v8"/></svg>5</span></li>
+            <li class="quest" data-reveal style="--delay:40ms"><span class="dot" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4 10-9"/></svg></span><span class="q-copy"><b>След во тьме</b><small>поднимись на 300 м</small></span><span class="reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="7.6"/><path d="M12 8v8"/></svg>10</span></li>
+            <li class="quest" data-reveal style="--delay:80ms"><span class="dot" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4 10-9"/></svg></span><span class="q-copy"><b>Выше крыш</b><small>поднимись на 800 м</small></span><span class="reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="7.6"/><path d="M12 8v8"/></svg>18</span></li>
+            <li class="quest" data-reveal style="--delay:120ms"><span class="dot" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4 10-9"/></svg></span><span class="q-copy"><b>К небу</b><small>поднимись на 1500 м</small></span><span class="reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="7.6"/><path d="M12 8v8"/></svg>30</span></li>
+            <li class="quest" data-reveal style="--delay:160ms"><span class="dot" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4 10-9"/></svg></span><span class="q-copy"><b>Охотник</b><small>сожги 25 мобов</small></span><span class="reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="7.6"/><path d="M12 8v8"/></svg>8</span></li>
+            <li class="quest" data-reveal style="--delay:200ms"><span class="dot" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4 10-9"/></svg></span><span class="q-copy"><b>Гроза тьмы</b><small>сожги 100 мобов</small></span><span class="reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="7.6"/><path d="M12 8v8"/></svg>20</span></li>
+            <li class="quest" data-reveal style="--delay:240ms"><span class="dot" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4 10-9"/></svg></span><span class="q-copy"><b>Кладоискатель</b><small>собери 100 монет</small></span><span class="reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="7.6"/><path d="M12 8v8"/></svg>10</span></li>
+            <li class="quest" data-reveal style="--delay:280ms"><span class="dot" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4 10-9"/></svg></span><span class="q-copy"><b>Богач</b><small>собери 400 монет</small></span><span class="reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="7.6"/><path d="M12 8v8"/></svg>25</span></li>
+            <li class="quest" data-reveal style="--delay:320ms"><span class="dot" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4 10-9"/></svg></span><span class="q-copy"><b>Путник</b><small>сделай 15 забегов</small></span><span class="reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="7.6"/><path d="M12 8v8"/></svg>12</span></li>
+            <li class="quest" data-reveal style="--delay:360ms"><span class="dot" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4 10-9"/></svg></span><span class="q-copy"><b>Вспышка</b><small>зажги фонарь 15 раз</small></span><span class="reward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="7.6"/><path d="M12 8v8"/></svg>8</span></li>
+          </ul>
+          <p class="quest-note" data-reveal>Рекорд, монеты и покупки сохраняются в профиле — на любом устройстве, если войти в аккаунт.</p>
+        </div>
+        <aside class="path-card" data-reveal style="--delay:140ms">
+          <h3>Путь наверх</h3>
+          <p>Четыре отметки, которые тьма запомнит.</p>
+          <div class="path">
+            <div class="path-node"><b>100 м</b><span>первый свет</span></div>
+            <div class="path-node"><b>300 м</b><span>след во тьме</span></div>
+            <div class="path-node"><b>800 м</b><span>выше крыш</span></div>
+            <div class="path-node"><b>1500 м</b><span>к небу</span></div>
+          </div>
+          <p class="hint">Дальше — только твой рекорд и общий рейтинг фонарщиков.</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta">
+    <div class="wrap">
+      <div class="cta-card" data-reveal>
+        <p class="eyebrow">Фонарь ждёт</p>
+        <h2>Зажги его</h2>
+        <p>Бесплатно. APK для Android. Весит всего 1 МБ — скачивается за секунды.</p>
+        <a class="btn btn-primary" href="assets/LightMan.apk" download="LightMan.apk">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v11"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M5 20h14"/></svg>
+          Скачать APK
+        </a>
+        <div class="install-steps">
+          <div class="install-step"><i>1</i><span>Скачай файл</span></div>
+          <div class="install-step"><i>2</i><span>Разреши установку</span></div>
+          <div class="install-step"><i>3</i><span>Зажги фонарь</span></div>
+        </div>
+        <p class="cta-note">Android · APK · 1 МБ</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="#top" aria-label="LightMan — на главную">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M13 5h6M14 5v3.2l-2.4 3.1v11.2h8.8V11.3L18 8.2V5"/>
+            <path d="M11.6 14.5h8.8M11.6 19.6h8.8"/>
+          </svg>
+          <b>Light<span class="accent">Man</span></b>
+        </a>
+        <p>Маленькая сказка большой тьмы. Бесплатная игра для Android.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Игра</h4>
+        <a href="assets/LightMan.apk" download="LightMan.apk">Скачать APK</a>
+        <a href="#frames">Кадры</a>
+        <a href="#shop">Лавка</a>
+        <a href="#quests">Задания</a>
+      </div>
+      <div class="footer-col">
+        <h4>Автор</h4>
+        <span>Чуприн Владимир</span>
+        <span>Автор игры</span>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 LightMan</span>
+      <span>Для Android<span class="dot"></span>APK · 1 МБ</span>
+    </div>
+  </div>
+</footer>
+
+<div class="download-bar">
+  <div>
+    <b>LightMan</b>
+    <span>Android · APK · 1 МБ</span>
+  </div>
+  <a class="btn btn-primary btn-sm" href="assets/LightMan.apk" download="LightMan.apk" aria-label="Скачать APK LightMan на телефон">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v11"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M5 20h14"/></svg>
+    Скачать
+  </a>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var coarse = window.matchMedia("(pointer: coarse)").matches;
+
+  var header = document.getElementById("header");
+  var bar = document.getElementById("scrollBar");
+  function onScroll() {
+    var y = window.scrollY || 0;
+    header.classList.toggle("is-scrolled", y > 24);
+    var max = document.documentElement.scrollHeight - window.innerHeight;
+    bar.style.width = (max > 0 ? Math.min(100, (y / max) * 100) : 0) + "%";
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
+  var revealEls = document.querySelectorAll("[data-reveal]");
+  if ("IntersectionObserver" in window && !reduce) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("in");
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.14, rootMargin: "0px 0px -8% 0px" });
+    revealEls.forEach(function (el) { io.observe(el); });
+  } else {
+    revealEls.forEach(function (el) { el.classList.add("in"); });
+  }
+
+  var menuBtn = document.getElementById("menuBtn");
+  var mobileMenu = document.getElementById("mobileMenu");
+  function closeMenu() {
+    document.body.classList.remove("nav-open");
+    menuBtn.setAttribute("aria-expanded", "false");
+    mobileMenu.setAttribute("aria-hidden", "true");
+  }
+  menuBtn.addEventListener("click", function () {
+    var open = !document.body.classList.contains("nav-open");
+    document.body.classList.toggle("nav-open", open);
+    menuBtn.setAttribute("aria-expanded", String(open));
+    mobileMenu.setAttribute("aria-hidden", String(!open));
+  });
+  mobileMenu.querySelectorAll("a").forEach(function (a) {
+    a.addEventListener("click", closeMenu);
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closeMenu();
+  });
+
+  var hero = document.querySelector(".hero");
+  var phone = document.getElementById("heroPhone");
+  if (hero && phone && !reduce && !coarse) {
+    var raf = 0, tx = 0, ty = 0;
+    hero.addEventListener("pointermove", function (e) {
+      var r = hero.getBoundingClientRect();
+      tx = (e.clientX - r.left) / r.width - 0.5;
+      ty = (e.clientY - r.top) / r.height - 0.5;
+      if (!raf) raf = requestAnimationFrame(applyTilt);
+    });
+    function applyTilt() {
+      raf = 0;
+      phone.style.setProperty("--rx", (-ty * 4).toFixed(2) + "deg");
+      phone.style.setProperty("--ry", (tx * 5).toFixed(2) + "deg");
+      hero.style.setProperty("--mx", tx.toFixed(3));
+      hero.style.setProperty("--my", ty.toFixed(3));
+    }
+    hero.addEventListener("pointerleave", function () {
+      phone.style.setProperty("--rx", "0deg");
+      phone.style.setProperty("--ry", "0deg");
+      hero.style.setProperty("--mx", "0");
+      hero.style.setProperty("--my", "0");
+    });
+    window.addEventListener("scroll", function () {
+      if (window.scrollY < window.innerHeight) {
+        phone.style.setProperty("--py", (window.scrollY * 0.05).toFixed(1) + "px");
+      }
+    }, { passive: true });
+  }
+
+  document.querySelectorAll(".card").forEach(function (card) {
+    card.addEventListener("pointermove", function (e) {
+      var r = card.getBoundingClientRect();
+      card.style.setProperty("--px", (e.clientX - r.left).toFixed(0) + "px");
+      card.style.setProperty("--py", (e.clientY - r.top).toFixed(0) + "px");
+    });
+  });
+
+  var track = document.getElementById("marqueeTrack");
+  if (track) track.innerHTML += track.innerHTML;
+
+  var gallery = document.getElementById("gallery");
+  var prev = document.getElementById("galPrev");
+  var next = document.getElementById("galNext");
+  function step() {
+    var first = gallery.querySelector(".shot");
+    return first ? first.getBoundingClientRect().width + 22 : 300;
+  }
+  function updateBtns() {
+    var max = gallery.scrollWidth - gallery.clientWidth - 4;
+    prev.disabled = gallery.scrollLeft <= 4;
+    next.disabled = gallery.scrollLeft >= max;
+  }
+  if (gallery && prev && next) {
+    prev.addEventListener("click", function () {
+      gallery.scrollBy({ left: -step(), behavior: reduce ? "auto" : "smooth" });
+    });
+    next.addEventListener("click", function () {
+      gallery.scrollBy({ left: step(), behavior: reduce ? "auto" : "smooth" });
+    });
+    gallery.addEventListener("scroll", updateBtns, { passive: true });
+    window.addEventListener("resize", updateBtns);
+    updateBtns();
+  }
+
+  var canvas = document.getElementById("fireflies");
+  if (canvas && hero) {
+    var ctx = canvas.getContext("2d");
+    var dots = [];
+    var w = 0, h = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var running = true;
+    function size() {
+      var r = hero.getBoundingClientRect();
+      w = r.width; h = r.height;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      canvas.style.width = w + "px";
+      canvas.style.height = h + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      build();
+    }
+    function build() {
+      var count = Math.min(46, Math.round(w / 26));
+      dots = [];
+      for (var i = 0; i < count; i++) {
+        dots.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          r: 0.7 + Math.random() * 1.9,
+          a: 0.15 + Math.random() * 0.5,
+          vx: (Math.random() - 0.5) * 0.22,
+          vy: -0.08 - Math.random() * 0.26,
+          ph: Math.random() * Math.PI * 2,
+          sp: 0.4 + Math.random() * 1.2
+        });
+      }
+    }
+    function draw(t) {
+      if (!running) return;
+      ctx.clearRect(0, 0, w, h);
+      for (var i = 0; i < dots.length; i++) {
+        var d = dots[i];
+        d.x += d.vx;
+        d.y += d.vy;
+        d.ph += 0.008 * d.sp;
+        if (d.y < -10) { d.y = h + 10; d.x = Math.random() * w; }
+        if (d.x < -10) d.x = w + 10;
+        if (d.x > w + 10) d.x = -10;
+        var glow = 0.55 + Math.sin(d.ph) * 0.45;
+        var alpha = d.a * glow;
+        var g = ctx.createRadialGradient(d.x, d.y, 0, d.x, d.y, d.r * 9);
+        g.addColorStop(0, "rgba(255,214,160," + alpha.toFixed(3) + ")");
+        g.addColorStop(0.4, "rgba(255,178,92," + (alpha * 0.45).toFixed(3) + ")");
+        g.addColorStop(1, "rgba(255,178,92,0)");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.r * 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(255,240,214," + Math.min(0.95, alpha + 0.2).toFixed(3) + ")";
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.r * 0.55, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      requestAnimationFrame(draw);
+    }
+    size();
+    window.addEventListener("resize", size);
+    document.addEventListener("visibilitychange", function () {
+      running = !document.hidden;
+      if (running) requestAnimationFrame(draw);
+    });
+    if (!reduce) requestAnimationFrame(draw);
+    else {
+      ctx.clearRect(0, 0, w, h);
+      dots.forEach(function (d) {
+        ctx.fillStyle = "rgba(255,214,160,.55)";
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+  }
+})();
+</script>
+</body>
+</html>
